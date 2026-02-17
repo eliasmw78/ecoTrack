@@ -33,7 +33,6 @@ model TypeEnergie {
 model Consommation {
   id          Int         @id @default(autoincrement())
   valeur      Float
-  cout        Float       @default(0)
   date        DateTime
   userId      String
   user        User        @relation(fields: [userId], references: [id])

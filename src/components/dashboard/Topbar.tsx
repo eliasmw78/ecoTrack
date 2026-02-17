@@ -1,0 +1,24 @@
+'use client';
+
+import React from 'react';
+import { User as UserIcon } from 'lucide-react';
+
+interface TopbarProps {
+    userName: string;
+}
+
+export function Topbar({ userName }: TopbarProps) {
+    return (
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-end px-8 fixed top-0 right-0 left-64 z-40">
+            <div className="flex items-center gap-4">
+                <div className="text-right">
+                    <p className="text-sm text-gray-500">Bonjour,</p>
+                    <p className="font-semibold text-dark-bg">{userName}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 text-gray-500">
+                    <UserIcon size={20} />
+                </div>
+            </div>
+        </header>
+    );
+}
