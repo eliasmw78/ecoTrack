@@ -57,34 +57,35 @@ function CustomTooltip({ active, payload, label }: any) {
 export function ExpensesChart({ data }: ExpensesChartProps) {
     if (data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[350px] text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-[250px] sm:h-[350px] text-gray-400 text-sm">
                 Aucune donnée à afficher pour le moment.
             </div>
         );
     }
 
     return (
-        <div style={{ width: '100%', height: 350 }}>
-            <ResponsiveContainer>
-                <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <div className="w-full h-[250px] sm:h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data} margin={{ top: 10, right: 5, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                     <XAxis
                         dataKey="name"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 11, fill: '#94a3b8' }}
                         axisLine={{ stroke: '#e2e8f0' }}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 11, fill: '#94a3b8' }}
                         axisLine={false}
                         tickLine={false}
-                        tickFormatter={(value) => `${value} €`}
+                        tickFormatter={(value) => `${value}€`}
+                        width={45}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
                     <Legend
                         iconType="circle"
                         iconSize={8}
-                        wrapperStyle={{ fontSize: 13, paddingTop: 8 }}
+                        wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
                     />
                     <Bar
                         dataKey="Électricité"

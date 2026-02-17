@@ -24,14 +24,14 @@ interface DistributionChartProps {
 export function DistributionChart({ data, totalAmount }: DistributionChartProps) {
     if (data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-[220px] sm:h-[280px] text-gray-400 text-sm">
                 Aucune donnée pour ce mois
             </div>
         );
     }
 
     return (
-        <div className="relative w-full h-[280px]">
+        <div className="relative w-full h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Pie

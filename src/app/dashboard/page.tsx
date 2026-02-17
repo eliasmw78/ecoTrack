@@ -134,17 +134,17 @@ export default async function DashboardPage() {
     const { elec, gaz, eau, totalGlobal, pieChartData, monthLabel, currentMonthName, previousMonthName, history, energyTypes } = data;
 
     return (
-        <div className="space-y-8">
-            <h1 className="text-3xl font-bold text-dark-bg">Tableau de bord</h1>
+        <div className="space-y-6 sm:space-y-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-dark-bg">Tableau de bord</h1>
 
             {/* KPI Grid */}
-            <p className="text-sm text-gray-500 -mb-4 capitalize">{monthLabel}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <p className="text-sm text-gray-500 -mb-2 sm:-mb-4 capitalize">{monthLabel}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* KPI 1: Électricité */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-warning-orange flex items-start justify-between">
+                <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border-l-4 border-warning-orange flex items-start justify-between">
                     <div>
-                        <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Dépense Élec. ({capitalize(currentMonthName)})</p>
-                        <p className="text-3xl font-bold text-dark-bg mt-2">{elec.current.toFixed(2)} €</p>
+                        <p className="text-xs sm:text-sm text-gray-500 font-medium uppercase tracking-wide">Dépense Élec. ({capitalize(currentMonthName)})</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-dark-bg mt-1 sm:mt-2">{elec.current.toFixed(2)} €</p>
                         <VariationBadge variation={elec.variation} previousMonthName={previousMonthName} />
                     </div>
                     <div className="p-3 bg-warning-orange/10 rounded-full text-warning-orange">
@@ -153,10 +153,10 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* KPI 2: Gaz */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-alert-red flex items-start justify-between">
+                <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border-l-4 border-alert-red flex items-start justify-between">
                     <div>
-                        <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Dépense Gaz ({capitalize(currentMonthName)})</p>
-                        <p className="text-3xl font-bold text-dark-bg mt-2">{gaz.current.toFixed(2)} €</p>
+                        <p className="text-xs sm:text-sm text-gray-500 font-medium uppercase tracking-wide">Dépense Gaz ({capitalize(currentMonthName)})</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-dark-bg mt-1 sm:mt-2">{gaz.current.toFixed(2)} €</p>
                         <VariationBadge variation={gaz.variation} previousMonthName={previousMonthName} />
                     </div>
                     <div className="p-3 bg-alert-red/10 rounded-full text-alert-red">
@@ -165,10 +165,10 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* KPI 3: Eau */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-tech-blue flex items-start justify-between">
+                <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border-l-4 border-tech-blue flex items-start justify-between">
                     <div>
-                        <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Dépense Eau ({capitalize(currentMonthName)})</p>
-                        <p className="text-3xl font-bold text-dark-bg mt-2">{eau.current.toFixed(2)} €</p>
+                        <p className="text-xs sm:text-sm text-gray-500 font-medium uppercase tracking-wide">Dépense Eau ({capitalize(currentMonthName)})</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-dark-bg mt-1 sm:mt-2">{eau.current.toFixed(2)} €</p>
                         <VariationBadge variation={eau.variation} previousMonthName={previousMonthName} />
                     </div>
                     <div className="p-3 bg-tech-blue/10 rounded-full text-tech-blue">
@@ -177,10 +177,10 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* KPI 4: Total Global */}
-                <div className="bg-dark-bg rounded-xl shadow-sm p-6 flex items-start justify-between">
+                <div className="bg-dark-bg rounded-xl shadow-sm p-4 sm:p-6 flex items-start justify-between">
                     <div>
-                        <p className="text-sm text-gray-400 font-medium uppercase tracking-wide">Total ({capitalize(currentMonthName)})</p>
-                        <p className="text-3xl font-bold text-white mt-2">{totalGlobal.toFixed(2)} €</p>
+                        <p className="text-xs sm:text-sm text-gray-400 font-medium uppercase tracking-wide">Total ({capitalize(currentMonthName)})</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">{totalGlobal.toFixed(2)} €</p>
                         <span className="inline-flex items-center gap-1 text-xs text-gray-400 mt-1 capitalize">{monthLabel}</span>
                     </div>
                     <div className="p-3 bg-white/10 rounded-full text-eco-green">
@@ -190,17 +190,17 @@ export default async function DashboardPage() {
             </div>
 
             {/* Charts + Form Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 {/* Colonne Gauche (2/3) : Graphiques */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="lg:col-span-2 space-y-6 lg:space-y-8 min-w-0">
                     {/* Graphique d'évolution */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 min-w-0">
                         <h3 className="text-lg font-bold text-dark-bg mb-4">Évolution des dépenses</h3>
                         <ExpensesChart data={chartData} />
                     </div>
 
                     {/* Graphique de répartition */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100">
                         <h3 className="text-lg font-bold text-dark-bg mb-4">Répartition des dépenses</h3>
                         <DistributionChart data={pieChartData} totalAmount={totalGlobal} />
                     </div>
@@ -214,18 +214,18 @@ export default async function DashboardPage() {
 
             {/* History Table */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-bold text-dark-bg">Historique des Factures</h3>
+                <div className="p-4 sm:p-6 border-b border-gray-100">
+                    <h3 className="text-base sm:text-lg font-bold text-dark-bg">Historique des Factures</h3>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 text-xs uppercase font-medium text-gray-500">
                             <tr>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Type</th>
-                                <th className="px-6 py-4">Conso.</th>
-                                <th className="px-6 py-4 text-right">Prix</th>
-                                <th className="px-6 py-4 text-center">Justificatif</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4">Date</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4">Type</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4">Conso.</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right">Prix</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-center">Justificatif</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -238,10 +238,10 @@ export default async function DashboardPage() {
                             ) : (
                                 history.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium">
+                                        <td className="px-3 sm:px-6 py-3 sm:py-4 font-medium">
                                             {item.date.toLocaleDateString('fr-FR')}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-3 sm:px-6 py-3 sm:py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                                 ${item.typeEnergie.libelle === 'Électricité' ? 'bg-warning-orange/10 text-warning-orange' : ''}
                                                 ${item.typeEnergie.libelle === 'Gaz' ? 'bg-alert-red/10 text-alert-red' : ''}
@@ -250,10 +250,10 @@ export default async function DashboardPage() {
                                                 {item.typeEnergie.libelle}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-3 sm:px-6 py-3 sm:py-4">
                                             {item.valeur} {item.typeEnergie.unite}
                                         </td>
-                                        <td className="px-6 py-4 text-right font-semibold text-dark-bg">
+                                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-semibold text-dark-bg">
                                             {item.cout.toFixed(2)} €
                                         </td>
                                         <td className="px-6 py-4 text-center">

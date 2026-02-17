@@ -34,12 +34,12 @@ export default async function DashboardLayout({
             <Sidebar />
 
             {/* Contenu principal */}
-            <div className="flex-1 flex flex-col ml-64">
+            <div className="flex-1 flex flex-col ml-0 lg:ml-64 overflow-x-hidden">
                 {/* Topbar fixe */}
                 <Topbar userName={userName} />
 
                 {/* Zone de contenu défilante */}
-                <main className="flex-1 mt-16 p-8 overflow-y-auto">
+                <main className="flex-1 mt-16 p-4 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden">
                     {children}
                 </main>
             </div>

@@ -110,16 +110,16 @@ export default async function ConsommationsPage({ searchParams }: PageProps) {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-dark-bg">Mes Consommations</h1>
-                    <p className="text-gray-500 mt-1">
+                    <h1 className="text-xl sm:text-2xl font-bold text-dark-bg">Mes Consommations</h1>
+                    <p className="text-gray-500 mt-1 text-sm sm:text-base">
                         Historique complet de vos consommations d&apos;énergie
                     </p>
                 </div>
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-eco-green text-white font-medium text-sm hover:bg-eco-green/90 transition-colors shadow-sm"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-eco-green text-white font-medium text-sm hover:bg-eco-green/90 transition-colors shadow-sm w-full sm:w-auto"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Retour au Dashboard
