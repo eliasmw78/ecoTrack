@@ -42,13 +42,14 @@ interface ConsommationWithVariation {
     date: Date;
     valeur: number;
     cout: number;
+    factureUrl: string | null;
     typeId: number;
     userId: string;
     typeEnergie: { id: number; libelle: string; unite: string };
     variation: number | null;
 }
 
-function computeVariations(data: { id: number; date: Date; valeur: number; cout: number; typeId: number; userId: string; typeEnergie: { id: number; libelle: string; unite: string } }[]): ConsommationWithVariation[] {
+function computeVariations(data: { id: number; date: Date; valeur: number; cout: number; factureUrl: string | null; typeId: number; userId: string; typeEnergie: { id: number; libelle: string; unite: string } }[]): ConsommationWithVariation[] {
     // data est trié par date ASC
     const lastByType = new Map<number, number>(); // typeId -> dernier coût
 
@@ -177,6 +178,9 @@ export default async function ConsommationsPage({ searchParams }: PageProps) {
                                     <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                                         Variation
                                     </th>
+                                    <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+                                        Justificatif
+                                    </th>
                                     <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                                         Actions
                                     </th>
@@ -235,6 +239,23 @@ export default async function ConsommationsPage({ searchParams }: PageProps) {
                                                     <Minus className="w-3 h-3" />
                                                     0%
                                                 </span>
+                                            )}
+                                        </td>
+
+                                        {/* Justificatif */}
+                                        <td className="px-6 py-4 text-center">
+                                            {item.factureUrl ? (
+                                                <a
+                                                    href={item.factureUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-tech-blue hover:bg-tech-blue/10 transition-colors"
+                                                    title="Voir le justificatif"
+                                                >
+                                                    <FileText className="w-4 h-4" />
+                                                </a>
+                                            ) : (
+                                                <span className="text-gray-300">—</span>
                                             )}
                                         </td>
 

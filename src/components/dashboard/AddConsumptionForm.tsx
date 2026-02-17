@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { addConsumption, updateConsumption } from '@/app/dashboard/actions';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Paperclip } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface TypeEnergie {
@@ -17,6 +17,7 @@ interface InitialData {
     typeId: number;
     valeur: number;
     cout: number;
+    factureUrl?: string | null;
 }
 
 interface AddConsumptionFormProps {
@@ -30,6 +31,7 @@ export function AddConsumptionForm({ types, initialData }: AddConsumptionFormPro
     const [isPending, setIsPending] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fileName, setFileName] = useState<string | null>(null);
 
     const defaultType = initialData
         ? types.find(t => t.id === initialData.typeId) || types[0]
@@ -159,6 +161,36 @@ export function AddConsumptionForm({ types, initialData }: AddConsumptionFormPro
                             €
                         </span>
                     </div>
+                </div>
+
+                {/* Justificatif */}
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">Justificatif</label>
+                    {isEditMode && initialData?.factureUrl && !fileName && (
+                        <div className="flex items-center gap-2 text-sm text-tech-blue mb-1">
+                            <a href={initialData.factureUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-tech-blue/80">
+                                Fichier actuel ↗
+                            </a>
+                        </div>
+                    )}
+                    <label
+                        htmlFor="facture"
+                        className="flex items-center gap-2 px-3 py-2 border border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-eco-green hover:bg-eco-green/5 transition-all text-sm text-gray-500"
+                    >
+                        <Paperclip className="w-4 h-4" />
+                        <span>{fileName || (isEditMode ? 'Remplacer le justificatif (PDF ou image, max 5 Mo)' : 'Joindre un justificatif (PDF ou image, max 5 Mo)')}</span>
+                    </label>
+                    <input
+                        type="file"
+                        name="facture"
+                        id="facture"
+                        accept=".pdf,image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            setFileName(file ? file.name : null);
+                        }}
+                    />
                 </div>
 
                 {/* Error Message */}

@@ -36,6 +36,7 @@ export async function addConsumption(formData: FormData) {
     const valeurStr = formData.get('valeur') as string;
     const coutStr = formData.get('cout') as string;
     const typeIdStr = formData.get('typeId') as string;
+    const facture = formData.get('facture') as File | null;
 
     const date = new Date(dateStr);
     const valeur = parseFloat(valeurStr);
@@ -59,13 +60,45 @@ export async function addConsumption(formData: FormData) {
     }
 
     try {
+        let factureUrl: string | null = null;
+
+        // Upload du justificatif si présent
+        if (facture && facture.size > 0) {
+            // Vérification taille max 5 Mo
+            if (facture.size > 5 * 1024 * 1024) {
+                return { error: 'Le fichier est trop volumineux (max 5 Mo)' };
+            }
+
+            const ext = facture.name.split('.').pop() || 'pdf';
+            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('factures')
+                .upload(fileName, facture, {
+                    cacheControl: '3600',
+                    upsert: false,
+                });
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                return { error: `Erreur d'upload : ${uploadError.message}` };
+            }
+
+            const { data: urlData } = supabase.storage
+                .from('factures')
+                .getPublicUrl(fileName);
+
+            factureUrl = urlData.publicUrl;
+        }
+
         await prisma.consommation.create({
             data: {
                 userId: user.id,
                 date,
                 valeur,
                 cout,
-                typeId
+                typeId,
+                factureUrl,
             }
         });
 
@@ -137,6 +170,7 @@ export async function updateConsumption(id: number, formData: FormData) {
     const valeurStr = formData.get('valeur') as string;
     const coutStr = formData.get('cout') as string;
     const typeIdStr = formData.get('typeId') as string;
+    const facture = formData.get('facture') as File | null;
 
     const date = new Date(dateStr);
     const valeur = parseFloat(valeurStr);
@@ -160,6 +194,36 @@ export async function updateConsumption(id: number, formData: FormData) {
     }
 
     try {
+        let factureUrl: string | undefined = undefined;
+
+        // Upload du justificatif si un nouveau fichier est fourni
+        if (facture && facture.size > 0) {
+            if (facture.size > 5 * 1024 * 1024) {
+                return { error: 'Le fichier est trop volumineux (max 5 Mo)' };
+            }
+
+            const ext = facture.name.split('.').pop() || 'pdf';
+            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('factures')
+                .upload(fileName, facture, {
+                    cacheControl: '3600',
+                    upsert: false,
+                });
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                return { error: `Erreur d'upload : ${uploadError.message}` };
+            }
+
+            const { data: urlData } = supabase.storage
+                .from('factures')
+                .getPublicUrl(fileName);
+
+            factureUrl = urlData.publicUrl;
+        }
+
         await prisma.consommation.update({
             where: { id },
             data: {
@@ -167,6 +231,7 @@ export async function updateConsumption(id: number, formData: FormData) {
                 valeur,
                 cout,
                 typeId,
+                ...(factureUrl !== undefined && { factureUrl }),
             },
         });
 

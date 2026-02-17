@@ -47,6 +47,7 @@ export default async function EditConsommationPage({ params }: PageProps) {
         typeId: consommation.typeId,
         valeur: consommation.valeur,
         cout: consommation.cout,
+        factureUrl: consommation.factureUrl,
     };
 
     return (
