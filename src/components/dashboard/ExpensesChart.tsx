@@ -64,44 +64,42 @@ export function ExpensesChart({ data }: ExpensesChartProps) {
     }
 
     return (
-        <div className="w-full h-[250px] sm:h-[350px]">
+        <div className="w-full h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data} margin={{ top: 10, right: 5, left: -15, bottom: 0 }}>
+                <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }} barSize={40}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                     <XAxis
                         dataKey="name"
-                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#94a3b8' }}
                         axisLine={{ stroke: '#e2e8f0' }}
                         tickLine={false}
+                        dy={10}
                     />
                     <YAxis
-                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#94a3b8' }}
                         axisLine={false}
                         tickLine={false}
-                        tickFormatter={(value) => `${value}€`}
-                        width={45}
+                        unit="€"
+                        width={60}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
                     <Legend
                         iconType="circle"
-                        iconSize={8}
-                        wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                        iconSize={10}
+                        wrapperStyle={{ fontSize: 13, paddingTop: 20 }}
                     />
                     <Bar
                         dataKey="Électricité"
-                        stackId="a"
                         fill="#3498DB"
-                        radius={[0, 0, 0, 0]}
+                        radius={[4, 4, 0, 0]}
                     />
                     <Bar
                         dataKey="Gaz"
-                        stackId="a"
                         fill="#F1C40F"
-                        radius={[0, 0, 0, 0]}
+                        radius={[4, 4, 0, 0]}
                     />
                     <Bar
                         dataKey="Eau"
-                        stackId="a"
                         fill="#2ECC71"
                         radius={[4, 4, 0, 0]}
                     />
