@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { addConsumption } from '@/app/dashboard/actions';
+import { addConsumption, updateConsumption } from '@/app/dashboard/actions';
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface TypeEnergie {
     id: number;
@@ -10,38 +11,58 @@ interface TypeEnergie {
     unite: string;
 }
 
-interface AddConsumptionFormProps {
-    types: TypeEnergie[];
+interface InitialData {
+    id: number;
+    date: string;       // format YYYY-MM-DD
+    typeId: number;
+    valeur: number;
+    cout: number;
 }
 
-export function AddConsumptionForm({ types }: AddConsumptionFormProps) {
+interface AddConsumptionFormProps {
+    types: TypeEnergie[];
+    initialData?: InitialData;
+}
+
+export function AddConsumptionForm({ types, initialData }: AddConsumptionFormProps) {
+    const isEditMode = !!initialData;
+    const router = useRouter();
     const [isPending, setIsPending] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedType, setSelectedType] = useState<TypeEnergie | null>(types[0] || null);
+
+    const defaultType = initialData
+        ? types.find(t => t.id === initialData.typeId) || types[0]
+        : types[0];
+    const [selectedType, setSelectedType] = useState<TypeEnergie | null>(defaultType || null);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const form = event.currentTarget; // Capture form reference immediately
+        const form = event.currentTarget;
         setIsPending(true);
         setError(null);
         setSuccess(false);
 
         const formData = new FormData(form);
-        const result = await addConsumption(formData);
+
+        const result = isEditMode
+            ? await updateConsumption(initialData!.id, formData)
+            : await addConsumption(formData);
 
         if (result.error) {
             setError(result.error);
         } else {
             setSuccess(true);
-            form.reset();
-            // Keep selected type or reset? Let's keep it.
-            // Reset Default Date
-            const dateInput = form.querySelector('input[name="date"]') as HTMLInputElement;
-            if (dateInput) dateInput.valueAsDate = new Date();
 
-            // Auto-hide success message after 3 seconds
-            setTimeout(() => setSuccess(false), 3000);
+            if (isEditMode) {
+                // Rediriger vers la liste après modification
+                setTimeout(() => router.push('/dashboard/consommations'), 1000);
+            } else {
+                form.reset();
+                const dateInput = form.querySelector('input[name="date"]') as HTMLInputElement;
+                if (dateInput) dateInput.valueAsDate = new Date();
+                setTimeout(() => setSuccess(false), 3000);
+            }
         }
         setIsPending(false);
     };
@@ -55,11 +76,13 @@ export function AddConsumptionForm({ types }: AddConsumptionFormProps) {
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-dark-bg">Nouvelle saisie</h2>
+                <h2 className="text-xl font-semibold text-dark-bg">
+                    {isEditMode ? 'Modifier la saisie' : 'Nouvelle saisie'}
+                </h2>
                 {success && (
                     <div className="flex items-center gap-2 text-eco-green text-sm font-medium animate-in fade-in transition-all">
                         <CheckCircle2 size={16} />
-                        Enregistré !
+                        {isEditMode ? 'Mis à jour !' : 'Enregistré !'}
                     </div>
                 )}
             </div>
@@ -73,18 +96,19 @@ export function AddConsumptionForm({ types }: AddConsumptionFormProps) {
                         name="date"
                         id="date"
                         required
-                        defaultValue={new Date().toISOString().split('T')[0]}
+                        defaultValue={initialData?.date || new Date().toISOString().split('T')[0]}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent outline-none transition-all"
                     />
                 </div>
 
                 {/* Type Field */}
                 <div className="space-y-1">
-                    <label htmlFor="typeId" className="block text-sm font-medium text-gray-700">Type d'énergie</label>
+                    <label htmlFor="typeId" className="block text-sm font-medium text-gray-700">Type d&apos;énergie</label>
                     <select
                         name="typeId"
                         id="typeId"
                         required
+                        defaultValue={initialData?.typeId}
                         onChange={handleTypeChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent outline-none transition-all bg-white"
                     >
@@ -107,6 +131,7 @@ export function AddConsumptionForm({ types }: AddConsumptionFormProps) {
                             step="0.1"
                             min="0"
                             required
+                            defaultValue={initialData?.valeur}
                             placeholder="0.0"
                             className="w-full pl-3 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent outline-none transition-all"
                         />
@@ -126,6 +151,7 @@ export function AddConsumptionForm({ types }: AddConsumptionFormProps) {
                             id="cout"
                             step="0.01"
                             min="0"
+                            defaultValue={initialData?.cout}
                             placeholder="0.00"
                             className="w-full pl-3 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent outline-none transition-all"
                         />
@@ -152,10 +178,10 @@ export function AddConsumptionForm({ types }: AddConsumptionFormProps) {
                     {isPending ? (
                         <>
                             <Loader2 className="animate-spin" size={18} />
-                            Ajout...
+                            {isEditMode ? 'Mise à jour...' : 'Ajout...'}
                         </>
                     ) : (
-                        'Ajouter'
+                        isEditMode ? 'Mettre à jour' : 'Ajouter'
                     )}
                 </button>
             </form>
