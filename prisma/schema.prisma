@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+
+
+
+}
+
+// Enum pour le rôle utilisateur
+enum Role {
+  USER
+  ADMIN
+}
+
+// Modèle Utilisateur
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  prenom       String
+  nom          String
+  role         Role           @default(USER)
+  created_at   DateTime       @default(now())
+  consumptions Consommation[] // Relation One-to-Many vers Consommation
+}
+
+// Modèle TypeEnergie
+model TypeEnergie {
+  id           Int            @id @default(autoincrement())
+  libelle      String
+  unite        String
+  consumptions Consommation[] // Relation One-to-Many vers Consommation
+}
+
+// Modèle Consommation
+model Consommation {
+  id      Int      @id @default(autoincrement())
+  valeur  Float
+  date    DateTime
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  typeId      Int
+  typeEnergie TypeEnergie @relation(fields: [typeId], references: [id])
+}
