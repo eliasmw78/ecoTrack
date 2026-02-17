@@ -1,11 +1,16 @@
 import React from 'react';
-import { Zap, Flame, Droplets, FileText, TrendingUp, TrendingDown, Minus, Wallet } from 'lucide-react';
+import { Zap, Flame, Droplets, FileText, TrendingUp, TrendingDown, Minus, Wallet, Calendar, Calculator, Award, Plus } from 'lucide-react';
 import { getEnergyTypes, getChartData } from './actions';
 import { AddConsumptionForm } from '@/components/dashboard/AddConsumptionForm';
 import { ExpensesChart } from '@/components/dashboard/ExpensesChart';
 import { DistributionChart } from '@/components/dashboard/DistributionChart';
 import prisma from '@/lib/prisma';
 import { createClient } from '@/utils/supabase/server';
+
+function capitalize(str: string) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 async function getDashboardStats() {
     const supabase = await createClient();
@@ -17,6 +22,7 @@ async function getDashboardStats() {
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const yearStart = new Date(now.getFullYear(), 0, 1);
 
     // Mois en cours
     const currentStats = await prisma.consommation.groupBy({
@@ -62,38 +68,73 @@ async function getDashboardStats() {
         include: { typeEnergie: true },
     });
 
-    const monthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    const currentMonthName = now.toLocaleString('fr-FR', { month: 'long' });
-    const previousMonthName = prevMonthStart.toLocaleString('fr-FR', { month: 'long' });
+    // Calculs annuels
+    const annualConsumptions = await prisma.consommation.findMany({
+        where: {
+            userId: user.id,
+            date: { gte: yearStart },
+        },
+        select: { date: true, cout: true }
+    });
+
+    const totalAnnual = annualConsumptions.reduce((acc, curr) => acc + curr.cout, 0);
+    const monthsPassed = now.getMonth() + 1;
+    const monthlyAverage = totalAnnual / monthsPassed;
+
+    const expensesByMonth = new Array(12).fill(0);
+    annualConsumptions.forEach(c => {
+        const monthIndex = new Date(c.date).getMonth();
+        expensesByMonth[monthIndex] += c.cout;
+    });
+
+    const maxMonthIndex = expensesByMonth.indexOf(Math.max(...expensesByMonth));
+    const maxMonthValue = expensesByMonth[maxMonthIndex];
+    const maxMonthName = new Date(now.getFullYear(), maxMonthIndex, 1).toLocaleString('fr-FR', { month: 'long' });
 
     const elec = getMonthly('Électricité');
     const gaz = getMonthly('Gaz');
     const eau = getMonthly('Eau');
 
-    const totalGlobal = elec.current + gaz.current + eau.current;
+    const curElec = elec.current;
+    const curGas = gaz.current;
+    const curWater = eau.current;
 
-    const pieChartData = [
-        { name: 'Électricité', value: elec.current, color: '#3498DB' },
-        { name: 'Gaz', value: gaz.current, color: '#E74C3C' },
-        { name: 'Eau', value: eau.current, color: '#2ECC71' },
-    ].filter(d => d.value > 0);
+    const totalGlobal = curElec + curGas + curWater;
+
+    const distributionData = [
+        { name: 'Électricité', value: curElec, color: '#3498DB' },
+        { name: 'Gaz', value: curGas, color: '#F1C40F' },
+        { name: 'Eau', value: curWater, color: '#2ECC71' },
+    ]
+        .filter(d => d.value > 0)
+        .map(d => ({
+            ...d,
+            percentage: totalGlobal > 0 ? ((d.value / totalGlobal) * 100).toFixed(1) : '0'
+        }));
+
+    const monthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const currentMonthName = now.toLocaleString('fr-FR', { month: 'long' });
+    const previousMonthName = prevMonthStart.toLocaleString('fr-FR', { month: 'long' });
+    const currentYear = now.getFullYear();
 
     return {
         elec,
         gaz,
         eau,
         totalGlobal,
-        pieChartData,
+        pieChartData: distributionData,
+        history,
+        energyTypes: types,
         monthLabel,
         currentMonthName,
         previousMonthName,
-        history,
-        energyTypes: types,
+        annualStats: {
+            total: totalAnnual,
+            average: monthlyAverage,
+            maxMonth: { name: capitalize(maxMonthName), value: maxMonthValue }
+        },
+        currentYear
     };
-}
-
-function capitalize(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function VariationBadge({ variation, previousMonthName }: { variation: number | null; previousMonthName: string }) {
@@ -131,10 +172,10 @@ export default async function DashboardPage() {
 
     if (!data) return null;
 
-    const { elec, gaz, eau, totalGlobal, pieChartData, monthLabel, currentMonthName, previousMonthName, history, energyTypes } = data;
+    const { elec, gaz, eau, totalGlobal, pieChartData, monthLabel, currentMonthName, previousMonthName, history, energyTypes, annualStats, currentYear } = data;
 
     return (
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-6 sm:space-y-8 pb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-dark-bg">Tableau de bord</h1>
 
             {/* KPI Grid */}
@@ -189,94 +230,139 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {/* Charts + Form Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                {/* Colonne Gauche (2/3) : Graphiques */}
-                <div className="lg:col-span-2 space-y-6 lg:space-y-8 min-w-0">
-                    {/* Graphique d'évolution */}
-                    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 min-w-0">
-                        <h3 className="text-lg font-bold text-dark-bg mb-4">Évolution des dépenses</h3>
-                        <ExpensesChart data={chartData} />
-                    </div>
-
-                    {/* Graphique de répartition */}
-                    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100">
-                        <h3 className="text-lg font-bold text-dark-bg mb-4">Répartition des dépenses</h3>
-                        <DistributionChart data={pieChartData} totalAmount={totalGlobal} />
-                    </div>
+            {/* Middle Row: Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Graphique d'évolution (2/3) */}
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 min-w-0">
+                    <h3 className="text-lg font-bold text-dark-bg mb-4">Évolution des dépenses</h3>
+                    <ExpensesChart data={chartData} />
                 </div>
 
-                {/* Colonne Droite (1/3) : Formulaire d'ajout */}
-                <div className="lg:col-span-1">
-                    <AddConsumptionForm types={energyTypes} />
+                {/* Graphique de répartition (1/3) */}
+                <div className="lg:col-span-1 bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100">
+                    <h3 className="text-lg font-bold text-dark-bg mb-4">Répartition des dépenses</h3>
+                    <DistributionChart data={pieChartData} totalAmount={totalGlobal} />
                 </div>
             </div>
 
-            {/* History Table */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                <div className="p-4 sm:p-6 border-b border-gray-100">
-                    <h3 className="text-base sm:text-lg font-bold text-dark-bg">Historique des Factures</h3>
+            {/* Bottom Row: Annual & History */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Bilan Annuel (Gauche) */}
+                <div className="bg-gray-50 rounded-xl p-6 sm:p-8 border border-gray-200">
+                    <h3 className="text-lg font-bold text-dark-bg mb-6">Bilan {currentYear}</h3>
+                    <div className="space-y-6">
+                        {/* Total Annuel */}
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-xl shadow-sm text-eco-green">
+                                <Calendar size={28} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Total Annuel</p>
+                                <p className="text-2xl font-bold text-dark-bg">{annualStats.total.toFixed(2)} €</p>
+                            </div>
+                        </div>
+
+                        {/* Moyenne Mensuelle */}
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-xl shadow-sm text-tech-blue">
+                                <Calculator size={28} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Moyenne Mensuelle</p>
+                                <p className="text-2xl font-bold text-dark-bg">{annualStats.average.toFixed(2)} € / mois</p>
+                            </div>
+                        </div>
+
+                        {/* Plus grosse dépense */}
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-xl shadow-sm text-warning-orange">
+                                <Award size={28} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Plus grosse dépense</p>
+                                <p className="text-2xl font-bold text-dark-bg">{annualStats.maxMonth.value > 0 ? `${annualStats.maxMonth.name} - ${annualStats.maxMonth.value.toFixed(2)} €` : '—'}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-gray-600">
-                        <thead className="bg-gray-50 text-xs uppercase font-medium text-gray-500">
-                            <tr>
-                                <th className="px-3 sm:px-6 py-3 sm:py-4">Date</th>
-                                <th className="px-3 sm:px-6 py-3 sm:py-4">Type</th>
-                                <th className="px-3 sm:px-6 py-3 sm:py-4">Conso.</th>
-                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right">Prix</th>
-                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-center">Justificatif</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {history.length === 0 ? (
+
+                {/* Historique récent (Droite) */}
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <div className="p-4 sm:p-6 border-b border-gray-100">
+                        <h3 className="text-base sm:text-lg font-bold text-dark-bg">Historique récent</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-gray-600">
+                            <thead className="bg-gray-50 text-xs uppercase font-medium text-gray-500">
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
-                                        Aucune facture enregistrée.
-                                    </td>
+                                    <th className="px-3 sm:px-6 py-3 sm:py-4">Date</th>
+                                    <th className="px-3 sm:px-6 py-3 sm:py-4">Type</th>
+                                    <th className="px-3 sm:px-6 py-3 sm:py-4">Conso.</th>
+                                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-right">Prix</th>
+                                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center">Doc</th>
                                 </tr>
-                            ) : (
-                                history.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-3 sm:px-6 py-3 sm:py-4 font-medium">
-                                            {item.date.toLocaleDateString('fr-FR')}
-                                        </td>
-                                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                ${item.typeEnergie.libelle === 'Électricité' ? 'bg-warning-orange/10 text-warning-orange' : ''}
-                                                ${item.typeEnergie.libelle === 'Gaz' ? 'bg-alert-red/10 text-alert-red' : ''}
-                                                ${item.typeEnergie.libelle === 'Eau' ? 'bg-tech-blue/10 text-tech-blue' : ''}
-                                            `}>
-                                                {item.typeEnergie.libelle}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                                            {item.valeur} {item.typeEnergie.unite}
-                                        </td>
-                                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-semibold text-dark-bg">
-                                            {item.cout.toFixed(2)} €
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            {item.factureUrl ? (
-                                                <a
-                                                    href={item.factureUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-tech-blue hover:bg-tech-blue/10 transition-colors"
-                                                    title="Voir le justificatif"
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                </a>
-                                            ) : (
-                                                <span className="text-gray-300">—</span>
-                                            )}
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {history.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                                            Aucune facture enregistrée.
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    history.map((item) => (
+                                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 font-medium">
+                                                {item.date.toLocaleDateString('fr-FR')}
+                                            </td>
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    ${item.typeEnergie.libelle === 'Électricité' ? 'bg-warning-orange/10 text-warning-orange' : ''}
+                                                    ${item.typeEnergie.libelle === 'Gaz' ? 'bg-alert-red/10 text-alert-red' : ''}
+                                                    ${item.typeEnergie.libelle === 'Eau' ? 'bg-tech-blue/10 text-tech-blue' : ''}
+                                                `}>
+                                                    {item.typeEnergie.libelle}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4">
+                                                {item.valeur} {item.typeEnergie.unite}
+                                            </td>
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-semibold text-dark-bg">
+                                                {item.cout.toFixed(2)} €
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {item.factureUrl ? (
+                                                    <a
+                                                        href={item.factureUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center justify-center p-1.5 rounded-lg text-tech-blue hover:bg-tech-blue/10 transition-colors"
+                                                        title="Voir le justificatif"
+                                                    >
+                                                        <FileText className="w-4 h-4" />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-300">—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+            </div>
+
+            {/* Footer: Formulaire d'ajout */}
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-tech-blue/10 rounded-lg text-tech-blue">
+                        <Plus className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-lg font-bold text-dark-bg">Nouvelle Saisie</h3>
+                </div>
+                <AddConsumptionForm types={energyTypes} />
             </div>
         </div>
     );
