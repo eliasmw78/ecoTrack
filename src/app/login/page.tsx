@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useActionState, useEffect } from 'react';
+import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { login, signup } from './actions';
@@ -26,6 +27,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [consentChecked, setConsentChecked] = useState(false);
 
     return (
         <div className="min-h-screen flex w-full">
@@ -107,9 +109,32 @@ export default function LoginPage() {
                             </div>
                         )}
 
+                        {/* Case RGPD (inscription uniquement) */}
+                        {!isLogin && (
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    checked={consentChecked}
+                                    onChange={(e) => setConsentChecked(e.target.checked)}
+                                    className="mt-1 h-4 w-4 rounded border-gray-300 text-eco-green focus:ring-eco-green accent-eco-green cursor-pointer"
+                                />
+                                <span className="text-sm text-gray-500 leading-relaxed">
+                                    J&apos;accepte la{' '}
+                                    <Link
+                                        href="/legal/confidentialite"
+                                        target="_blank"
+                                        className="text-tech-blue hover:underline font-medium"
+                                    >
+                                        Politique de Confidentialité
+                                    </Link>{' '}
+                                    et consens au traitement de mes données.
+                                </span>
+                            </label>
+                        )}
+
                         <button
                             type="submit"
-                            disabled={isPending}
+                            disabled={isPending || (!isLogin && !consentChecked)}
                             className="w-full bg-eco-green text-white py-3 rounded-lg font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isPending ? (
